@@ -1,0 +1,9 @@
+package com.internal.internal_rag_core_service.repository;
+
+import com.internal.internal_rag_core_service.domain.IngestedDocument;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.UUID;
+
+public interface IngestedDocumentRepository extends JpaRepository<IngestedDocument, UUID> {
+}
