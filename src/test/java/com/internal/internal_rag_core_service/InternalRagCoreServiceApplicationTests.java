@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 
-@SpringBootTest
+@SpringBootTest(properties = "XAI_API_KEY=test-key")
 @Import(TestcontainersConfiguration.class)
 class InternalRagCoreServiceApplicationTests {
 

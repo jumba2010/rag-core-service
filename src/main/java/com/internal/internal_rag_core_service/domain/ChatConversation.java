@@ -37,8 +37,19 @@ public class ChatConversation {
     private Instant lastMessageAt;
 
     public static ChatConversation startingWith(String firstUserMessage) {
+        return startingWith(UUID.randomUUID(), firstUserMessage);
+    }
+
+    /**
+     * Starts a conversation under a caller-supplied id rather than a
+     * server-generated one. Some frontends (e.g. a chat widget that
+     * pre-generates an id before the first message) need to pick their own
+     * conversation id up front; letting them own it here is simpler than
+     * requiring a round trip just to learn the real id before asking anything.
+     */
+    public static ChatConversation startingWith(UUID id, String firstUserMessage) {
         ChatConversation conversation = new ChatConversation();
-        conversation.id = UUID.randomUUID();
+        conversation.id = id;
         conversation.title = shortenToTitle(firstUserMessage);
         conversation.createdAt = Instant.now();
         conversation.lastMessageAt = conversation.createdAt;

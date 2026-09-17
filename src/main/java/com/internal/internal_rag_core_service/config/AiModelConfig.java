@@ -24,9 +24,9 @@ public class AiModelConfig {
             """;
 
     /**
-     * Wraps the Bedrock-backed {@link ChatModel} autoconfigured by
-     * spring-ai-starter-model-bedrock-converse with logging. Marked
-     * {@link Primary} so both this bean and the auto-configured
+     * Wraps the chat {@link ChatModel} autoconfigured by spring-ai-starter-model-openai
+     * (pointed at xAI's OpenAI-compatible endpoint - see application.yml) with logging.
+     * Marked {@link Primary} so both this bean and the auto-configured
      * {@code ChatClient.Builder} resolve to the decorated instance.
      */
     @Bean

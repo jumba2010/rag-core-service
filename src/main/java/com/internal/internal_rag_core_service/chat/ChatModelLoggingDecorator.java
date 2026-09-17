@@ -9,7 +9,7 @@ import org.springframework.ai.chat.prompt.Prompt;
 import reactor.core.publisher.Flux;
 
 /**
- * Decorator around the Bedrock-backed {@link ChatModel} that adds latency and
+ * Decorator around the chat-provider-backed {@link ChatModel} that adds latency and
  * token-usage logging without the rest of the application (or Spring AI's own
  * advisor chain) knowing it's there. Wrapping - rather than editing the
  * autoconfigured bean - keeps this cross-cutting concern separate from model
@@ -33,7 +33,7 @@ public class ChatModelLoggingDecorator implements ChatModel {
             logCompletion(startedAt, response);
             return response;
         } catch (RuntimeException e) {
-            log.error("Bedrock chat call failed after {} ms", elapsedMillis(startedAt), e);
+            log.error("Chat model call failed after {} ms", elapsedMillis(startedAt), e);
             throw e;
         }
     }
@@ -42,8 +42,8 @@ public class ChatModelLoggingDecorator implements ChatModel {
     public Flux<ChatResponse> stream(Prompt prompt) {
         long startedAt = System.nanoTime();
         return delegate.stream(prompt)
-                .doOnComplete(() -> log.debug("Bedrock chat stream completed in {} ms", elapsedMillis(startedAt)))
-                .doOnError(e -> log.error("Bedrock chat stream failed after {} ms", elapsedMillis(startedAt), e));
+                .doOnComplete(() -> log.debug("Chat model stream completed in {} ms", elapsedMillis(startedAt)))
+                .doOnError(e -> log.error("Chat model stream failed after {} ms", elapsedMillis(startedAt), e));
     }
 
     @Override
@@ -54,10 +54,10 @@ public class ChatModelLoggingDecorator implements ChatModel {
     private void logCompletion(long startedAt, ChatResponse response) {
         var usage = response.getMetadata() != null ? response.getMetadata().getUsage() : null;
         if (usage != null) {
-            log.info("Bedrock chat call completed in {} ms (promptTokens={}, completionTokens={})",
+            log.info("Chat model call completed in {} ms (promptTokens={}, completionTokens={})",
                     elapsedMillis(startedAt), usage.getPromptTokens(), usage.getCompletionTokens());
         } else {
-            log.info("Bedrock chat call completed in {} ms", elapsedMillis(startedAt));
+            log.info("Chat model call completed in {} ms", elapsedMillis(startedAt));
         }
     }
 

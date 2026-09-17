@@ -32,17 +32,19 @@ spring:
 
   ai:
     model:
-      chat: bedrock-converse
+      chat: openai
       embedding: bedrock-titan
+    openai:
+      base-url: ${XAI_BASE_URL:https://api.x.ai}
+      api-key: ${XAI_API_KEY:}
+      chat:
+        options:
+          model: ${XAI_CHAT_MODEL_ID:grok-4.6}
+          temperature: 0.3
+          max-tokens: 1024
     bedrock:
       aws:
         region: ${AWS_REGION:us-east-1}
-      converse:
-        chat:
-          options:
-            model: ${BEDROCK_CHAT_MODEL_ID:us.anthropic.claude-sonnet-4-5-20250929-v1:0}
-            temperature: 0.3
-            max-tokens: 1024
       titan:
         embedding:
           model: ${BEDROCK_EMBEDDING_MODEL_ID:amazon.titan-embed-text-v2:0}

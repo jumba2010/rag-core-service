@@ -3,7 +3,9 @@ package com.internal.internal_rag_core_service.ingestion;
 import org.springframework.ai.document.Document;
 import org.springframework.core.io.Resource;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -33,9 +35,26 @@ public abstract class DocumentIngestionPipeline {
     protected List<Document> tag(List<Document> documents, UUID documentId, String filename) {
         return documents.stream()
                 .map(document -> document.mutate()
-                        .metadata("document_id", documentId.toString())
-                        .metadata("filename", filename)
+                        .metadata(withoutNullValues(document, documentId, filename))
                         .build())
                 .toList();
+    }
+
+    /**
+     * Some readers (e.g. PagePdfDocumentReader on a resource with no filename)
+     * leave null values in their metadata map. Spring AI's Document forbids
+     * that outright, so this drops them before adding our own keys rather
+     * than letting a single bad chunk fail the whole document.
+     */
+    private Map<String, Object> withoutNullValues(Document document, UUID documentId, String filename) {
+        Map<String, Object> metadata = new HashMap<>();
+        document.getMetadata().forEach((key, value) -> {
+            if (value != null) {
+                metadata.put(key, value);
+            }
+        });
+        metadata.put("document_id", documentId.toString());
+        metadata.put("filename", filename);
+        return metadata;
     }
 }

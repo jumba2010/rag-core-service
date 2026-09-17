@@ -37,14 +37,34 @@ public class DocumentProcessingWorker {
         documentRepository.save(document);
 
         try {
-            var chunks = pipeline.run(documentId, filename, new ByteArrayResource(content));
+            var chunks = pipeline.run(documentId, filename, namedResource(filename, content));
             document.markReady(chunks.size());
             log.info("Ingested document {} ('{}') into {} chunks", documentId, filename, chunks.size());
-        } catch (Exception e) {
-            log.warn("Ingestion failed for document {} ('{}')", documentId, filename, e);
-            document.markFailed(e.getMessage());
+        } catch (Throwable t) {
+            // Catching Throwable (not just Exception) is deliberate: a bad
+            // classpath in a parsing library can surface as a LinkageError
+            // (e.g. NoSuchMethodError) rather than a checked exception. Left
+            // uncaught, the document would stay stuck in PROCESSING forever
+            // instead of being reported as FAILED.
+            log.warn("Ingestion failed for document {} ('{}')", documentId, filename, t);
+            document.markFailed(t.getMessage());
         } finally {
             documentRepository.save(document);
         }
+    }
+
+    /**
+     * Plain {@link ByteArrayResource} always returns null from getFilename(),
+     * which PagePdfDocumentReader stores verbatim as PDF page metadata -
+     * violating Spring AI's Document invariant that no metadata value may be
+     * null. Carrying the real filename through avoids that.
+     */
+    private ByteArrayResource namedResource(String filename, byte[] content) {
+        return new ByteArrayResource(content) {
+            @Override
+            public String getFilename() {
+                return filename;
+            }
+        };
     }
 }

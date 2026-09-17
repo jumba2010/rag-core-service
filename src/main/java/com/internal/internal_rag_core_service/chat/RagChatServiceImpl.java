@@ -71,12 +71,19 @@ public class RagChatServiceImpl implements RagChatService {
         return messageRepository.findByConversationIdOrderByCreatedAtAsc(conversationId);
     }
 
+    /**
+     * Get-or-create rather than a strict lookup: some frontends pre-generate a
+     * conversation id client-side before the very first message, so a
+     * client-supplied id that doesn't exist yet just starts a new
+     * conversation under that id instead of failing the request.
+     */
     private ChatConversation resolveConversation(ChatRequest request) {
         if (request.conversationId() == null) {
             return conversationRepository.save(ChatConversation.startingWith(request.message()));
         }
         return conversationRepository.findById(request.conversationId())
-                .orElseThrow(() -> new ConversationNotFoundException(request.conversationId()));
+                .orElseGet(() -> conversationRepository.save(
+                        ChatConversation.startingWith(request.conversationId(), request.message())));
     }
 
     private List<Message> priorMessagesFor(UUID conversationId) {
@@ -95,7 +102,7 @@ public class RagChatServiceImpl implements RagChatService {
                     .call()
                     .chatClientResponse();
         } catch (Exception e) {
-            throw new ChatGenerationException("Bedrock chat model call failed", e);
+            throw new ChatGenerationException("Chat model call failed", e);
         }
     }
 
