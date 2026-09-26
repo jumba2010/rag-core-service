@@ -37,36 +37,36 @@ The service is intentionally provider-agnostic: chat completions go through an *
 
 ```mermaid
 flowchart LR
-    Client([Frontend / API client])
+    Client(["Frontend / API client"])
 
-    subgraph Service[RAG Core Service - Spring Boot 3]
-        Filter[ApiKeyAuthFilter]
-        DocCtl[DocumentController]
-        ChatCtl[ChatController]
-        Ingest[DocumentIngestionService]
-        Worker[DocumentProcessingWorker<br/>@Async on virtual threads]
-        Pipeline[DocumentIngestionPipeline<br/>parse → tag → chunk → store]
-        Chat[RagChatService]
-        Advisor[QuestionAnswerAdvisor<br/>top-K + similarity threshold]
+    subgraph Service["RAG Core Service - Spring Boot 3"]
+        Filter["ApiKeyAuthFilter"]
+        DocCtl["DocumentController"]
+        ChatCtl["ChatController"]
+        Ingest["DocumentIngestionService"]
+        Worker["DocumentProcessingWorker<br/>@Async on virtual threads"]
+        Pipeline["DocumentIngestionPipeline<br/>parse → tag → chunk → store"]
+        Chat["RagChatService"]
+        Advisor["QuestionAnswerAdvisor<br/>top-K + similarity threshold"]
     end
 
-    subgraph Data[PostgreSQL 16]
-        Meta[(documents,<br/>conversations,<br/>messages)]
-        Vec[(vector_store<br/>pgvector · HNSW · cosine)]
+    subgraph Data["PostgreSQL 16"]
+        Meta[("documents,<br/>conversations,<br/>messages")]
+        Vec[("vector_store<br/>pgvector · HNSW · cosine")]
     end
 
-    LLM[[Chat model<br/>OpenAI-compatible API · xAI Grok]]
-    Emb[[Embeddings<br/>Amazon Bedrock Titan v2]]
+    LLM[["Chat model<br/>OpenAI-compatible API · xAI Grok"]]
+    Emb[["Embeddings<br/>Amazon Bedrock Titan v2"]]
 
-    Client -->|X-API-Key| Filter
+    Client -->|"X-API-Key"| Filter
     Filter --> DocCtl & ChatCtl
     DocCtl --> Ingest --> Worker --> Pipeline
-    Pipeline -->|embed chunks| Emb
+    Pipeline -->|"embed chunks"| Emb
     Pipeline --> Vec
     Ingest --> Meta
     ChatCtl --> Chat --> Advisor
-    Advisor -->|similarity search| Vec
-    Chat -->|grounded prompt + history| LLM
+    Advisor -->|"similarity search"| Vec
+    Chat -->|"grounded prompt + history"| LLM
     Chat --> Meta
 ```
 
