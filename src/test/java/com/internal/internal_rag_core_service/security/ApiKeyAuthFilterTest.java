@@ -53,4 +53,31 @@ class ApiKeyAuthFilterTest {
 
         verify(chain, times(1)).doFilter(request, response);
     }
+
+    @Test
+    void failsClosedWhenNoKeyIsConfigured() throws Exception {
+        ApiKeyAuthFilter unconfigured = new ApiKeyAuthFilter("");
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader(ApiKeyAuthFilter.HEADER_NAME, "");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        FilterChain chain = Mockito.mock(FilterChain.class);
+
+        unconfigured.doFilter(request, response, chain);
+
+        assertThat(response.getStatus()).isEqualTo(401);
+        verify(chain, never()).doFilter(request, response);
+    }
+
+    @Test
+    void rejectsKeysThatOnlyShareAPrefix() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader(ApiKeyAuthFilter.HEADER_NAME, "expected-secret-but-longer");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        FilterChain chain = Mockito.mock(FilterChain.class);
+
+        filter.doFilter(request, response, chain);
+
+        assertThat(response.getStatus()).isEqualTo(401);
+        verify(chain, never()).doFilter(request, response);
+    }
 }
